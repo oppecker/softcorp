@@ -1,107 +1,107 @@
 import argparse
 from collections import namedtuple
 
-Record = namedtuple('Record', 'type name length value')
-Info = namedtuple('Info', 'name value_type')
+Record = namedtuple('Record', 'tag name length value')
+Field = namedtuple('Field', 'name value_type in_report')
 
-HEADER_TYPES = {
-        1: Info(name='Rev', value_type=str),
-        2: Info(name='Header length', value_type=int),
-        3: Info(name='Signer identity length', value_type=None),
-        4: Info(name='Signer name', value_type=str),
-        5: Info(name='Cert SN', value_type=str),
-        6: Info(name='CA Name', value_type=str),
-        7: Info(name='Garbage?', value_type=None),
-        8: Info(name='Dig alg', value_type=str),
-        9: Info(name='Garbage?', value_type=None),
-        10: Info(name='Sig alg', value_type=str),
-        11: Info(name='Mod size', value_type=str),
-        12: Info(name='Signature', value_type=str),
-        14: Info(name='File Name and Extension', value_type=str),
-        15: Info(name='END', value_type=str),
+HEADER_FIELDS = {
+        1: Field(name='Rev', value_type=str, in_report=True),
+        2: Field(name='Header length', value_type=int, in_report=True),
+        3: Field(name='Signer identity length', value_type=None, in_report=False),
+        4: Field(name='Signer name', value_type=str, in_report=False),
+        5: Field(name='Cert SN', value_type=str, in_report=False),
+        6: Field(name='CA Name', value_type=str, in_report=False),
+        7: Field(name='Garbage?', value_type=None, in_report=False),
+        8: Field(name='Dig alg', value_type=str, in_report=False),
+        9: Field(name='Garbage?', value_type=None, in_report=False),
+        10: Field(name='Sig alg', value_type=str, in_report=False),
+        11: Field(name='Mod size', value_type=str, in_report=False),
+        12: Field(name='Signature', value_type=str, in_report=False),
+        14: Field(name='File Name and Extension', value_type=str, in_report=False),
+        15: Field(name='END', value_type=str, in_report=False),
 }
 
-BODY_TYPES = {
-        1: Info(name='Record Length', value_type=int),
-        2: Info(name='Subject DNS Name', value_type=str),
-        3: Info(name='Subject Name', value_type=str),
-        4: Info(name='Subject Function/Role', value_type=str),
-        5: Info(name='Subject Certificate Issuer Name', value_type=str),
-        6: Info(name='Subject Certificate Serial Number', value_type=str),
-        7: Info(name='Subject Public Key', value_type=str),
-        8: Info(name='Subject Certificate Signature', value_type=str),
-        9: Info(name='Subject X.509v3 Certificate', value_type=str),
-        10: Info(name='Subject IP Address', value_type=str),
-        11: Info(name='Hash of Certificate', value_type=str),
-        12: Info(name='Hash Algorithm', value_type=str),
+BODY_FIELDS = {
+        1: Field(name='Record Length', value_type=int, in_report=True),
+        2: Field(name='Subject DNS Name', value_type=str, in_report=False),
+        3: Field(name='Subject Name', value_type=str, in_report=True),
+        4: Field(name='Subject Function/Role', value_type=str, in_report=True),
+        5: Field(name='Subject Certificate Issuer Name', value_type=str, in_report=True),
+        6: Field(name='Subject Certificate Serial Number', value_type=str, in_report=False),
+        7: Field(name='Subject Public Key', value_type=str, in_report=False),
+        8: Field(name='Subject Certificate Signature', value_type=str, in_report=False),
+        9: Field(name='Subject X.509v3 Certificate', value_type=str, in_report=False),
+        10: Field(name='Subject IP Address', value_type=str, in_report=False),
+        11: Field(name='Hash of Certificate', value_type=str, in_report=False),
+        12: Field(name='Hash Algorithm', value_type=str, in_report=False),
 }
 
-HEADER_REPORT = [1,2]
-BODY_REPORT = [1,3,4,5,9]
 REPORT = {
         'header': [],
         'body': [],
 }
 
-
 def parse_header(data):
     while data:
-        if data[0] not in HEADER_TYPES:
-            #Skip 'garbage' to avoid crashes
+        if data[0] not in HEADER_FIELDS:
+            #If not a valid field, advance to next data value.
             data = data[1:]
             continue
         else:
-            type = data[0]
-            name = HEADER_TYPES[type].name
+            tag = data[0]
+            name = HEADER_FIELDS[tag].name
             length = int.from_bytes(data[1:3], byteorder='big')
             #value = data[3:length+2]
             value = data[3:length+3]
-            if HEADER_TYPES[type].value_type is int:
+            if HEADER_FIELDS[tag].value_type is int:
                 value = int.from_bytes(value, byteorder='big')
             #value = int.from_bytes(data[3:length+2], byteorder='big')
-            record = Record(type=type, name=name, length=length, value=value)
+            record = Record(tag, name, length, value)
 
-        if type in HEADER_REPORT:
+        if HEADER_FIELDS[tag].in_report:
             REPORT['header'].append(record)
 
-        if HEADER_TYPES[type].value_type is None:
+        if HEADER_FIELDS[tag].value_type is None:
             data = data[3:]
+        elif HEADER_FIELDS[tag].name == 'END':
+            #Best guess that works based on sample input file.
+            data = data[4:]
+            break
         else:
             data = data[3+length:]
 
-        if type == 15:
-            break
     return data
 
 
 def parse_body(data):
     while data:
-        record = {}
-        if data[0] not in BODY_TYPES:
-            #Skip 'garbage' to avoid crashes
+        if data[0] not in BODY_FIELDS:
+            #If not a valid field, advance to next data value.
             data = data[1:]
             continue
         else:
-            type = data[0]
-            name = BODY_TYPES[type].name
+            tag = data[0]
+            name = BODY_FIELDS[tag].name
             length = int.from_bytes(data[1:3], byteorder='big')
             #value = data[3:length+2]
             value = data[3:length+3]
-            if BODY_TYPES[type].value_type is int:
+            if BODY_FIELDS[tag].value_type is int:
                 value = int.from_bytes(value, byteorder='big')
             #value = int.from_bytes(data[3:length+2], byteorder='big')
-            record = Record(type=type, name=name, length=length, value=value)
+            if BODY_FIELDS[tag].in_report:
+                #record = Record(type=type, name=name, length=length, value=value)
+                record = Record(tag, name, length, value)
+                REPORT['body'].append(record)
 
         data = data[3+length:]
-        REPORT['body'].append(record)
 
     return data
 
 
 def print_report():
     print('\nParse CTL File\n--------------\n')
-    for type, name, length, value in REPORT['header']:
-        print(f'{name}: type:{type} len:{length} value:{value}')
+    for tag, name, length, value in REPORT['header']:
+        print(f'{name}: tag:{tag} len:{length} value:{value}')
 
     record_count = 1
     print('\nStart CTL Records\n-----------------')
@@ -109,12 +109,14 @@ def print_report():
         if name == 'Record Length':
             print(f'\n--- CTL Record: {record_count} ---\n')
             record_count += 1
-        print(f'{name}: type:{type} len:{length} value:{value}')
+        print(f'{name}: tag:{tag} len:{length} value:{value}')
+
 
 def main(data):
     data = parse_header(data)
     data = parse_body(data)
     print_report()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
