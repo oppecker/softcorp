@@ -51,11 +51,9 @@ def parse_header(data):
             tag = data[0]
             name = HEADER_FIELDS[tag].name
             length = int.from_bytes(data[1:3], byteorder='big')
-            #value = data[3:length+2]
             value = data[3:length+3]
             if HEADER_FIELDS[tag].value_type is int:
                 value = int.from_bytes(value, byteorder='big')
-            #value = int.from_bytes(data[3:length+2], byteorder='big')
             record = Record(tag, name, length, value)
 
         if HEADER_FIELDS[tag].in_report:
@@ -83,13 +81,10 @@ def parse_body(data):
             tag = data[0]
             name = BODY_FIELDS[tag].name
             length = int.from_bytes(data[1:3], byteorder='big')
-            #value = data[3:length+2]
             value = data[3:length+3]
             if BODY_FIELDS[tag].value_type is int:
                 value = int.from_bytes(value, byteorder='big')
-            #value = int.from_bytes(data[3:length+2], byteorder='big')
             if BODY_FIELDS[tag].in_report:
-                #record = Record(type=type, name=name, length=length, value=value)
                 record = Record(tag, name, length, value)
                 REPORT['body'].append(record)
 
