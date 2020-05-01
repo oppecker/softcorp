@@ -1,0 +1,31 @@
+Files:
+* SCFParser.py - a simplified version of SCFParser.exe written for this project.
+* SCFFile.tlv - the SCFFile provided by professor as an example of input.
+
+- Run SCFParser.py from the command line, providing it with a .tlv file to parse.
+- It will parse the fields in the Header and Body from the file, the print out a short report.
+
+- The report is printed to stndout and is hard coded to include this information:
+
+	Parse CTL File
+	--------------
+
+	Rev: tag:1 len:2 value:b'\x01\x02'
+	Header length: tag:2 len:2 value:312
+
+	Start CTL Records
+	-----------------
+
+	--- CTL Record: 1 ---
+
+	Record Length: tag:2 len:2 value:1147
+	Subject Name: tag:2 len:55 value:b'CN=gigantic-6.cisco.com;OU=VTG;O=Alpha;L=SJ;ST=CA;C=US\x00'
+	Subject Function/Role: tag:2 len:2 value:b'\x00\x00'
+	Subject Certificate Issuer Name: tag:2 len:55 value:b'CN=gigantic-6.cisco.com;OU=VTG;O=Alpha;L=SJ;ST=CA;C=US\x00'
+
+	--- CTL Record: 2 ---
+	...<Report continues for each CTL Record Parsed>...
+
+- Fields can be added or removed from the report by changing the corresponding 'in_report' boolean for the field in HEADER_FIELDS or BODY_FIELDS.
+
+-Static Analysis results: Used sonarqube (https://www.sonarqube.org/) for the static analysis here. It directed me to remove 5 commented out lines, and make sure that the python argparse module was being used apropriatly for user input. Will include screenshots from this as documention in our report.

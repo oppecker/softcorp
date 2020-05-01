@@ -1,1 +1,18 @@
-Future location of the fuzzer code
+Files for Fuzzing:
+* make_fuzz_files.py - python script to generate modfied versions of SCFFile.tlv to use for fuzzing SCFParser.exe
+* fuzz_template/SCFFile.tlv - Provided by professor, used here as a template/seed to modify for fuzzing.
+* fuzz_files/ - directory to store .tlv files created by make_fuzz_files.py
+* fuzz_files.py - Runs fuzzing test, loops through fuzz_files/ directory and runs SCFParser.exe on each file it finds there.
+	Then prints results to console.
+
+Application under Test: (included in repo for convenience)
+* SCFParser.exe - Main executable.
+* __MACOSX/ - files required by SCFParser.exe
+* libeay32.dll - file required by SCFParser.exe
+* ssleay32.dll - file required by SCFParser.exe
+
+
+To preform fuzzing test on SCFParser.exe:
+1) Run make_fuzz_files.py to create .tlv files to fuzz test with. (by default 20 are created, can by modifed by command line)
+2) Run fuzz_files.py to perform the fuzzing tests with created files.
+3) Examine output on commandline to analyze the results.
