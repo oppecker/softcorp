@@ -100,7 +100,7 @@ def print_report():
 
     record_count = 1
     print('\nStart CTL Records\n-----------------')
-    for type, name, length, value in REPORT['body']:
+    for tag, name, length, value in REPORT['body']:
         if name == 'Record Length':
             print(f'\n--- CTL Record: {record_count} ---\n')
             record_count += 1
